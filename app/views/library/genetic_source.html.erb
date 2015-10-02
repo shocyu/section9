@@ -1,0 +1,800 @@
+<h2>遺伝的アルゴリズムによる巡回セールスマン問題プログラム（ruby、試作)</h2>
+
+<div class ="source">
+<p>
+<div class ="comment">
+#---------------------------------------------------------------------------#<br>
+#Geneticsクラス（genesの生成と、交叉）<br></div>
+class Genetics
+</p>
+
+<p>
+<div class ="comment">#
+genes, value, evaluation は参照と変更可能</div><br>
+attr_accessor :genes<br>
+attr_accessor :value<br>
+attr_accessor :evaluation<br>
+attr_accessor :reciprocal
+</p>
+
+<p>
+<div class ="comment">
+#コンストラクタ（インスタンス変数 @genes, @value, @evaluation, @reciprocal生成)</div><br>
+def initialize(number_of_genes, max_value, overwrap)<br>
+&nbsp;&nbsp;@genes = Array.new(number_of_genes, 0)    #genes配列（遺伝情報を格納する配列）<br>
+&nbsp;&nbsp;@value = Array.new(number_of_genes, 0.0)    #value配列（遺伝情報に基づく値（表現型の情報））<br>
+&nbsp;&nbsp;@evaluation = 1.0    #value配列に基づき、各個体の評価関数の値（適合度）を格納<br>
+&nbsp;&nbsp;@reciprocal = 0.0    #評価関数の値（evaluation)の逆数を格納（評価関数が少ないほど良い場合に用いる）
+</p>
+
+<p>
+  <div class ="comment">
+&nbsp;&nbsp;#重複を認める場合、ランダムに遺伝情報を生成</div><br>
+&nbsp;&nbsp;if overwrap == 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@genes[i] = Random.rand(max_value * 10) % max_value<br>
+&nbsp;&nbsp;end<br>
+<div class ="comment">
+&nbsp;&nbsp;#重複を認めない場合、遺伝情報の分だけ値をシャッフルして生成</div><br>
+&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@genes[i] = i<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;@genes.shuffle!<br>
+&nbsp;&nbsp;end
+</p>
+
+<p>
+end
+</p>
+
+<p>
+<div class ="comment">
+#crossメソッド(２つの親の遺伝情報を交叉、１点交叉）</div><br>
+def cross(other, child1, child2, number_of_genes, max_value, overwrap, cross)
+</p>
+
+<p>
+&nbsp;&nbsp;index = 0<br>
+&nbsp;&nbsp;division = number_of_genes / (cross+1)
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;#重複を認める場合</div><br>
+&nbsp;&nbsp;if overwrap == 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;stack = 0
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;#cross（交叉点数により交叉する、しないの区別）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(cross) do
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#i が偶数（０を含む）の遺伝情報は親をそのまま引き継ぐ</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (i != cross)  &amp;&amp; ( ( i / 2 ) == 0 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for j in (division * i)..( (division * (i+1)) -1 ) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j] = self.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = other.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#i が奇数の場合は遺伝情報を交換</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elsif (i != cross) &amp;&amp; ( ( i / 2 ) != 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for j in (division * i)..( (division * (i+1)) -1 ) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j]= other.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = self.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#iが偶数（０を含む）でかつラスト（ラストまで交換なし）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elsif (i == cross)  &amp;&amp; ( ( i / 2 ) == 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for j in (division * i)..( number_of_genes -1 ) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j] = self.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = other.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#i が奇数でかつラスト（ラストまで交換）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elsif (i == cross) &amp;&amp; ( ( i / 2 ) != 0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for j in (division * i)..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j]= other.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = self.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#if文終わり</div>
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#突然変異（各個体について、１つの遺伝子を書き換え）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;index = Random.rand(number_of_genes * 10) % number_of_genes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[index] = Random.rand(max_value)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[index] = Random.rand(max_value)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;#重複を認めない場合</div><br>
+&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;stack = 0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;one_to_two = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;two_to_one = 0
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;#親から子へそのままコピー</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[i] = self.genes[i]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[i] = other.genes[i]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..cross do
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#交差点が偶数で crossの値が（ラスト）でない場合はそのまま</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (i != cross) &amp;&amp; ( (i / 2) == 0 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;next
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#交差点が奇数で crossの値が（ラスト）でない場合は遺伝情報を交換</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elsif ( i != cross) &amp;&amp; ( (i / 2) != 0 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for j in (division * i)..( (division * (i+1)) -1 ) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;one_to_two = child1.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;two_to_one = child2.genes[j]
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child1.genes[j] == child2.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j] = two_to_one<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = one_to_two<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else<br>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#2つの個体の遺伝情報が異なる場合、各個体間で入れ替え（重複を避けるため）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for k in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child1.genes[k] == two_to_one &amp;&amp; (k != j)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[k] = child1.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j] = two_to_one<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for k in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child2.genes[k] == one_to_two &amp;&amp; (k != j)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[k] = child2.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = one_to_two<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#if文終了（遺伝情報が同じかどうかの判定）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#for文終了（遺伝情報の交換）</div>
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#交差点が偶数で cross（ラスト）の場合はループ終了</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elsif (i == cross) &amp;&amp; ( (i / 2) == 0 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#交差点が奇数で cross（ラスト）の場合は最後（number_of_genes -1)まで遺伝情報を交換</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elsif (i == cross) &amp;&amp; ( (i / 2) != 0 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for j in (division * i)..( number_of_genes -1 ) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;one_to_two = child1.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;two_to_one = child2.genes[j]
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child1.genes[j] == child2.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j] = two_to_one<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = one_to_two<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else<br>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#2つの個体の遺伝情報が異なる場合、各個体間で入れ替え（重複を避けるため）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for k in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child1.genes[k] == two_to_one &amp;&amp; (k != j)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[k] = child1.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j] = two_to_one<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for k in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child2.genes[k] == one_to_two &amp;&amp; (k != j)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[k] = child2.genes[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = one_to_two<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end    <div class ="comment">#if文終了（遺伝情報が同じかどうか判定）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#for文終了 (遺伝情報の交換）</div>
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#if文終了 (crossが偶数か奇数か)</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#for文終了（cross＝交叉点数の分だけ）</div>
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;#突然変異（各個体について、１つの遺伝子を書き換え）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;index = Random.rand(number_of_genes * 10) % number_of_genes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;stack = child1.genes[index]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[index] = Random.rand(max_value)
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;for j in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child1.genes[j] == stack &amp;&amp; (j != index)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child1.genes[j] = stack<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;index = Random.rand(number_of_genes * 10) % number_of_genes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;stack = child2.genes[index]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[index] = Random.rand(max_value)
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;for j in 0..(number_of_genes-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child2.genes[j] == stack &amp;&amp; (j != index)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child2.genes[j] = stack<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;stack = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;index = 0
+</p>
+
+<p>
+&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#overwrapによる場合分け終了</div><br>
+end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#crossメソッド終了</div>
+</p>
+
+<p>
+end<br>
+<div class ="comment">
+#Geneticクラス定義ここまで<br>
+#-------------------------------------------------------------------------#
+</p></div>
+<br>
+<p><div class ="comment">
+#-------------------------------------------------------------------------#<br>
+#Make_Individualクラス（parent,childなどの集団の生成とランク付け、淘汰を行うクラス）<br>
+class Make_Individual</div>
+</p>
+
+<p>
+<div class ="comment">
+#インスタンス変数 individuals は参照と変更可能</div><br>
+attr_accessor :individuals
+</p>
+
+<p>
+<div class ="comment">
+#コンストラクタ（インスタンス変数 @individuals(parentの集団、または child の集団）生成)</div><br>
+def initialize(number_of_individuals, number_of_genes1, max_value1, overwrap1)
+</p>
+
+<p>
+&nbsp;&nbsp;@individuals = Array.new(number_of_individuals)
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;#個々の個体をGeneticsクラスによって定義（各個体は遺伝情報、表現型、評価関数（適合度）の各情報を持つ）</div><br>
+&nbsp;&nbsp;for i in 0..(number_of_individuals-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;@individuals[i] = Genetics.new(number_of_genes1, max_value1, overwrap1)<br>
+&nbsp;&nbsp;end<br>
+end
+</p>
+
+<p>
+<div class ="comment">
+#cross_individualメソッド（parentからchildへの集団全体の交叉－Geneticsクラスの、crossメソッド使用）</div><br>
+def cross_individual(other, number_of_genes1, max_value1, overwrap1, cross1)<br>
+&nbsp;&nbsp;for j in 0..( (NI / 2)-1 ) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.individuals[2*j].cross(self.individuals[(2*j)+1], other.individuals[2*j], other.individuals[(2*j)+1], number_of_genes1, max_value1, overwrap1, cross1)<br>
+&nbsp;&nbsp;end<br>
+end
+</p>
+
+<p>
+<div class ="comment">
+#rankingメソッド（交叉によって生まれたchild群の評価関数(evaluation)によるランク付け)</div><br>
+def ranking(number_of_individuals, number_of_genes1, max_value1, overwrap1, better_ways)<br>
+&nbsp;&nbsp;child_dummy = Genetics.new(number_of_genes1, max_value1, overwrap1)
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;#評価関数（evaluation)が高いほど良い場合</div><br>
+&nbsp;&nbsp;if better_ways == 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(number_of_individuals-2) do
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;j = 0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;while (self.individuals[i-j+1].evaluation &gt; self.individuals[i-j].evaluation) &amp;&amp; ( (i-j) &gt;= 0 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child_dummy = self.individuals[i-j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.individuals[i-j] = self.individuals[i-j+1]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.individuals[i-j+1] = child_dummy
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;j += 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;#評価関数（evaluation)が低いほど良い場合</div><br>
+&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(number_of_individuals-2) do
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;j = 0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;while (self.individuals[i-j+1].reciprocal &gt; self.individuals[i-j].reciprocal) &amp;&amp; ( (i-j) &gt;= 0 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child_dummy = self.individuals[i-j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.individuals[i-j] = self.individuals[i-j+1]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;self.individuals[i-j+1] = child_dummy
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;j += 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#if文ここまで</div><br>
+end<br>
+<div class ="comment">
+#rankingメソッドここまで</div>
+</p>
+
+<p>
+<div class ="comment">
+#elimination メソッド（上位５０％を選別し、新しい世代(parent)を生成）</div><br>
+def elimination(other, ways_of_choice, number_of_individuals, better_ways)
+</p>
+
+<p>
+&nbsp;&nbsp;random_score = 0.0
+</p>
+
+<p>
+&nbsp;&nbsp;#選択方法によって場合分け<br>
+&nbsp;&nbsp;case ways_of_choice
+</p>
+
+<p>
+&nbsp;&nbsp;# 0: ルーレット選択<br>
+&nbsp;&nbsp;when 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(number_of_individuals-1) do
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;random_score = Random.rand<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;j = 0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;while random_score &gt; ( (sum_of_evaluation(self, better_ways, j)) / (sum_of_evaluation(self, better_ways, ( (number_of_individuals / 2)-1)) ) )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;j += 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;other.individuals[i] = self.individuals[j]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;end&nbsp;&nbsp;&nbsp;&nbsp;<div class ="comment">#case文終わり</div>
+</p>
+
+<p>
+end<br>
+<div class ="comment">
+#eliminationメソッドここまで</div>
+</p>
+
+<p>
+<div class ="comment">
+#sum_of_evaluationメソッド（それぞれの個体の評価関数の和を取る）</div><br>
+def sum_of_evaluation(group, better1, number)
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;# better_ways = high 評価関数の値が高いほど良い（適合度が高い）場合</div><br>
+&nbsp;&nbsp;if better1 == 0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;sum = 0.0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(number) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sum += group.individuals[i].evaluation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;return sum
+</p>
+
+<p>
+  <div class ="comment">
+&nbsp;&nbsp;# better_ways = low 評価関数の値が低いほど良い（適合度が高い）場合</div><br>
+&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;sum = 0.0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in 0..(number) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sum += group.individuals[i].reciprocal<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;return sum<br>
+&nbsp;&nbsp;end    <div class ="comment">#if文終わり</div><br>
+end<br>
+<div class ="comment">
+#sum_of_evaluationメソッドここまで</div>
+</p>
+
+<p>
+end<br>
+<div class ="comment">
+#Make_Individualクラスここまで<br>
+#-------------------------------------------------------------------------#
+</div></p>
+<br>
+<p><div class ="comment">
+#-------------------------------------------------------------------------#<br>
+#make_distanceメソッド（２点間の距離を求めるメソッド）</div><br>
+def make_distance(x1, x2, y1, y2)<br>
+&nbsp;&nbsp;d_pow = 0.0<br>
+&nbsp;&nbsp;d = 0.0
+</p>
+
+<p>
+&nbsp;&nbsp;d_pow = ( (x2 - x1)**2) + ( (y2-y1)**2)<br>
+&nbsp;&nbsp;d = Math.sqrt(d_pow)<br>
+&nbsp;&nbsp;return d<br>
+end<br>
+<div class ="comment">
+#--------------------------------------------------------------------------#
+</div></p>
+
+<p><div class ="comment">
+#巡回セールスマン問題を解く
+</div></p>
+
+<p><div class ="comment">
+#基本情報の入力------------------------------------------------------------#<br>
+#遺伝子長（各個体の遺伝情報の数）の入力</div><br>
+puts &quot;Number of genes&quot;<br>
+NG = gets.to_i
+</p>
+
+<p><div class ="comment">
+#各遺伝情報の最大値（整数）を入力</div><br>
+puts &quot;Maximum Value&quot;<br>
+MV = gets.to_i
+</p>
+
+<p><div class ="comment">
+#個体数の入力</div><br>
+puts &quot;Number of Individuals&quot;<br>
+NI = gets.to_i
+</p>
+
+<p><div class ="comment">
+#交叉、淘汰する世代数の入力</div><br>
+puts &quot;Generations&quot;<br>
+Generation = gets.to_i
+</p>
+
+<p><div class ="comment">
+#遺伝情報の重複の可否</div><br>
+puts &quot;Overwrap OK? Yes=0, No=1&quot;<br>
+Over = gets.to_i
+</p>
+
+<p><div class ="comment">
+#交叉するポイント数の入力（１点交叉～多点交叉）</div><br>
+puts &quot;Number of crossing points&quot;<br>
+Cross = gets.to_i
+</p>
+
+<p><div class ="comment">
+#個体選択の方法（０：ルーレット式）</div><br>
+puts &quot;Which ways of choice? 0:roulette&quot;<br>
+Ways = gets.to_i
+</p>
+
+<p><div class ="comment">
+#評価関数の値、high=高いほど良い（適合度が高い）、low = 低いほど良い</div><br>
+puts &quot;Which is better, high or low? (0:high, 1:low)&quot;<br>
+Better = gets.to_i
+</p>
+
+<p><div class ="comment">
+#通過する点の数を入力（最低２点）</div><br>
+puts &quot;Number of Points (&gt;= 2)&quot;<br>
+Points = gets.to_i
+</p>
+
+<p>
+position = Array.new(Points)
+</p>
+
+<p><div class ="comment">
+#各点間の距離を格納する配列の生成</div><br>
+distance = Array.new(Points)<br>
+for i in 0..(Points-1) do<br>
+  distance[i] = Array.new(Points, 0.0)<br>
+end
+</p>
+
+<p><div class ="comment">
+#各点の座標を（x,y）入力（スペース区切り)</div><br>
+puts Points.to_s + &quot;Positions, Let&#x27;s Put(x _ y)&quot;
+</p>
+
+<p><div class ="comment">
+#各点の座標を格納（position[i][0]をｘ座標、position[i][1]をｙ座標とする</div><br>
+for i in 0..(Points-1) do
+</p>
+
+<p>
+&nbsp;&nbsp;position[i] = Array.new(2)    #position配列（各点の座標を入力する）を生成
+</p>
+
+<p>
+&nbsp;&nbsp;s = gets.chomp.split(/ /)
+</p>
+
+<p>
+&nbsp;&nbsp;position[i][0] = s[0].to_f<br>
+&nbsp;&nbsp;position[i][1] = s[1].to_f<br>
+end<br>
+<div class ="comment">
+#基本情報の入力終わり<br>
+#------------------------------------------------------------------------#
+</div></p>
+<br>
+<p><div class ="comment">
+#------------------------------------------------------------------------#<br>
+#入力した各点間の距離を求める</div><br>
+for i in 0..(Points-2) do<br>
+&nbsp;&nbsp;for j in (i+1)..(Points-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;distance[i][j] = make_distance(position[i][0], position[j][0], position[i][1], position[j][1])<br>
+&nbsp;&nbsp;&nbsp;&nbsp;distance[j][i] = distance[i][j]     # 0-&gt;1, 1-&gt;0 の距離は同じ<br>
+&nbsp;&nbsp;end<br>
+end
+</p>
+
+<p><div class ="comment">
+#親の個体を生成</div><br>
+parent = Make_Individual.new(NI, NG, MV, Over)
+</p>
+
+<p><div class ="comment">
+#子の個体を生成</div><br>
+child = Make_Individual.new(NI, NG, MV, Over)
+</p>
+
+<p><div class ="comment">
+#parent(親の個体）の遺伝情報の初期化</div><br>
+for i in 0..(NI-1) do
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;#遺伝情報の最初と最後を０とする（出発点を同じにするため）</div><br>
+&nbsp;&nbsp;parent.individuals[i].genes[0] = 0<br>
+&nbsp;&nbsp;parent.individuals[i].genes[NG-1] = 0
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;#-------------------------------------------------------------------------#<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#各遺伝情報に上限を設ける<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#遺伝子長１０の場合、最初は０、次の上限は８（９－１）、その次は<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;７（８－１）とする<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#最初は０の場合、２番目は [0, 1, 2, 3, 4, 5, 6, 7, 8]の９つの値<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;から選べる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#２番目に７を選んだ場合、次は残りの [0, 1, 2, 3, 4, 5, 6, 8]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;から選べる<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#遺伝情報との対応は　　　　　　　（ [0, 1, 2, 3, 4, 5. 6, 7]　）<br>
+&nbsp;&nbsp;#-------------------------------------------------------------------------#</div><br>
+&nbsp;&nbsp;for j in 1..(NG-2) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;parent.individuals[i].genes[j] = Random.rand(NG-j)<br>
+&nbsp;&nbsp;end<br>
+end
+</p>
+
+<p>
+actual_point = Array.new(NG-1, 0)
+</p>
+
+<p><div class ="comment">
+#generation（世代数）まで、交叉の繰り返し、value配列(距離を格納）の更新、それに基づく淘汰</div><br>
+for i in 0..(Generation-1) do
+</p>
+
+<p>
+&nbsp;&nbsp;for j in 0..(NI-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;child.individuals[j].evaluation = 0.0<br>
+&nbsp;&nbsp;end
+</p>
+
+<p>
+<div class ="comment">
+&nbsp;&nbsp;#世代交叉（巡回セールスマン問題でも重複ＯＫ）</div><br>
+&nbsp;&nbsp;parent.cross_individual(child, NG, MV, Over, Cross)
+</p>
+
+<p>
+&nbsp;&nbsp;for j in 0..(NI-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for k in 1..(NG-2) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if child.individuals[j].genes[k] &gt;= NG-k<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child.individuals[j].genes[k] = Random.rand(NG-k)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;if child.individuals[j].genes[0] != 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child.individuals[j].genes[0] = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;if child.individuals[j].genes[NG-1] != 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child.individuals[j].genes[NG-1] = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end<br>
+&nbsp;&nbsp;end
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;#遺伝情報を基に、value配列(表現型）の値（各点間の距離）を格納</div><br>
+&nbsp;&nbsp;for j in 0..(NI-1) do
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;#順序を格納する配列（遺伝情報より表現型の情報を取り出す際に使用）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;order = Array.new(NG-1)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;actual_point[0..(NG-1)] = 0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;n1 = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;n2 = 0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;for k in 0..(NG-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;order[k] = k<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;for k in 0..(NG-2) do
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n1 = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n2 = 0
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n1 = order[child.individuals[j].genes[k]]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;order.delete(n1)
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n2 = order[child.individuals[j].genes[k+1]]
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;actual_point[k] = n1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;actual_point[k+1] = n2
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child.individuals[j].value[k] = distance[n1][n2]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;#value配列の最後の要素は最後の点から点１に返る距離</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;child.individuals[j].value[NG-1] = distance[ actual_point[NG-1] ][0]
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;#value配列の値の総和を取り、それを評価関数（evaluation)の値とする</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;for k in 0..(NG-1) do<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;child.individuals[j].evaluation += child.individuals[j].value[k]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;&nbsp;&nbsp;#evaluation（評価関数）の逆数（reciprocal)を取る（距離が少ないほど良い＝適合度が高い、ので）</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;child.individuals[j].reciprocal = 1 / child.individuals[j].evaluation<br>
+&nbsp;&nbsp;end
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;#交叉によって生成されたchild群の評価関数（適合度）によるランク付け</div><br>
+&nbsp;&nbsp;#Make_individualクラスの ranking メソッド使用<br>
+&nbsp;&nbsp;child.ranking(NI, NG, MV, Over, Better)
+</p>
+
+<p><div class ="comment">
+&nbsp;&nbsp;# child.elimination メソッド呼び出し（子の集合を淘汰）</div><br>
+&nbsp;&nbsp;child.elimination(parent, Ways, NI, Better)
+</p>
+
+<p>
+&nbsp;&nbsp;puts &quot;Generation No.&quot; + (i+1).to_s + &quot;, result = &quot; + child.individuals[0].evaluation.to_s
+</p>
+
+<p>
+end<br>
+<div class ="comment">
+#交叉、Valueの算出、淘汰のループ終了</div>
+</p>
+</div>

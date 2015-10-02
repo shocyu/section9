@@ -1,0 +1,153 @@
+<div class ="source">
+
+<h2>ハノイの塔プログラム（再帰的アルゴリズムを用いた）</h2>
+
+<p>
+<div class ="comment">
+#プログラム読み込み開始時間を表示<br>
+</div>
+start_time = Time.now
+</p>
+
+<p>
+<div class ="comment">
+#direct メソッド<br>
+# 引数（コマの番号、スタート位置、ゴール位置）<br>
+# ３列の配列を生成し、その配列を返す<br>
+</div>
+def direct(piece, start, goal)<br>
+    &nbsp;&nbsp;ar2 = Array.new(1)<br>
+    &nbsp;&nbsp;ar2[0] = Array.new(3)<br>
+    <br>
+    &nbsp;&nbsp;ar2[0][0] = piece<br>
+    &nbsp;&nbsp;ar2[0][1] = start<br>
+    &nbsp;&nbsp;ar2[0][2] = goal<br>
+    <br>
+    &nbsp;&nbsp;return ar2<br>
+end<br>
+<div class ="comment">
+# direct メソッド終わり
+</div>
+</p>
+
+<p>
+<div class ="comment">
+# hanoi メソッド（コマ番号、スタート、と行先を格納した配列を返すメソッド）<br>
+# 引数（コマ番号、スタート位置、ゴール位置）<br>
+# ３列の配列を生成し、その配列を返す。<br>
+</div>
+def  hanoi(piece, start, goal)<br>
+    <br>
+    &nbsp;&nbsp;start1 = 0<br>
+    &nbsp;&nbsp;goal1 = 0<br>
+    <br>
+    &nbsp;&nbsp;start1 = start<br>
+    &nbsp;&nbsp;goal1 = goal<br>
+    <br>
+    &nbsp;&nbsp;ar1 = Array.new<br>
+    <br>
+    <div class ="comment">
+    &nbsp;&nbsp;# stack （間の位置）を決定（start = 1, goal = 3　ならば、stack = 2)</div><br>
+    &nbsp;&nbsp;if start == 1 &amp;&amp; goal ==2<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack = 3<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;elsif start == 1 &amp;&amp; goal ==3<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack = 2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;elsif start == 2 &amp;&amp; goal ==1<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack =3<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;elsif start == 2 &amp;&amp; goal ==3<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack = 1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;elsif start == 3 &amp;&amp; goal ==1<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack = 2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;elsif start == 3 &amp;&amp; goal ==2<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stack = 1<br>
+    &nbsp;&nbsp;end<br>
+        <br>
+    <div class ="comment">
+    &nbsp;&nbsp;# コマの番号が２になった場合<br>
+    &nbsp;&nbsp;# いちばん基本の組み合わせ（ここから元をたどって、最後にすべての答えが入った配列が返される）<br>
+    </div>
+    &nbsp;&nbsp;if piece &lt;= 2<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;i = 0<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar = Array.new(3)<br>
+    <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;for i in 0..2 do<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ar[i] = Array.new(3)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;end<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[0][0] = piece - 1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[0][1] = start<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[0][2] = stack<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[1][0] = piece<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[1][1] = start<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[1][2] = goal<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[2][0] = piece - 1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[2][1] = stack<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar[2][2] = goal<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;return ar    <div class ="comment"># 値が格納された配列を返す</div><br>
+    &nbsp;&nbsp;else<br>
+        <br>
+        <div class ="comment">
+        &nbsp;&nbsp;&nbsp;&nbsp;# 再帰的呼び出し<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;# １つ前のコマの状態を呼び出し、それを元に自分自身の配列を形作る<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;# 真ん中に　direct メソッドによって生成された配列を入れている<br>
+        </div>
+        &nbsp;&nbsp;&nbsp;&nbsp;ar1 = hanoi((piece - 1), start1, stack) + direct(piece, start1, goal1) + hanoi((piece - 1), stack, goal1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;return ar1<br>
+    &nbsp;&nbsp;end<br>
+end<br>
+<div class ="comment">
+# hanoi メソッド終わり</div>
+</p>
+
+<p>
+<div class ="comment">
+#実際の処理（メインの処理）
+</div>
+</p>
+
+<p>
+<div class ="comment">
+# 最初にコマの数を入力（n = コマの数）<br>
+</div>
+puts &quot;Number of Pieces&quot;<br>
+n = gets.to_i
+</p>
+
+<p>
+<div class ="comment">
+# 答えを格納する配列を生成（最初は大きさを決めないでおく）<br>
+</div>
+ar3 = Array.new
+</p>
+
+<p>
+<div class ="comment">
+# 最初の hanoi メソッド呼び出し（それ以降、順次 hanoi メソッド内で次の hanoi メソッドが呼び出される（再帰的呼び出し）　）<br>
+</div>
+ar3 = hanoi(n, 1, 3)
+</p>
+
+<p>
+max = ar3.size
+</p>
+
+<p>
+<div class ="comment">
+# 答えを最初から出力（ar3[]　配列を用いて）<br>
+</div>
+for i in 0..(max - 1) do<br>
+    &nbsp;&nbsp;puts &quot;No.&quot; + (i+1).to_s + &quot;, piece&quot; + ar3[i][0].to_s + &quot;, from&quot; + ar3[i][1].to_s + &quot;, to&quot; + ar3[i][2].to_s<br>
+end
+</p>
+
+<p>
+<div class ="comment">
+# 実行時間を出力<br>
+</div>
+p &quot;Processing Time #{Time.now - start_time}s&quot;
+</p>
+
+</div>

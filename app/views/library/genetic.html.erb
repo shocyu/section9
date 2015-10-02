@@ -1,0 +1,61 @@
+<h2>遺伝的アルゴリズムを用いて巡回セールスマン問題を解く</h2>
+
+<p><%= link_to "ソースはこちら", "https://section9-shocyu-1.c9.io/library/genetic_source" %></p>
+
+<p>今回は遺伝的アルゴリズムのプログラムを書きました。と言いたいところですが、いい結果が出ていません。</p>
+
+<p>遺伝的アルゴリズムではまず遺伝情報と呼ばれる個体の情報の並び（配列）をどう設定するかにかかっています。そこの詰めが甘いのかと</p>
+
+<p>私がいつも使っているエンジニアの質問サイトにて質問をしています。やはり理論的に深いです
+<%= link_to "（私のサイトはこちら）", "https://teratail.com/users/shocyu" %></p>
+
+<p>これから、おおよその理想的な結果は分かっていますので、それに近づくためのアルゴリズムの整備をしなくてはと思っています。</p>
+
+<p>ですが、我ながら良く出来ていると思います。</p>
+
+<p><a>今回のソース</a>では２つのクラスを作成し、遺伝情報を持つ個体と、その集団を生成するクラスとしてあります。オブジェクト指向の入門として
+良い課題でした。</p>
+
+<p>いつもながら余計な箇所が多いかと思います。もしお気づきの点がございましたら私の質問サイトまでコメントお願いします
+<%= link_to "（私のサイトはこちら）", "https://teratail.com/users/shocyu" %></p>
+<br><br>
+
+<p>では遺伝的アルゴリズムを形作る２つのクラスの説明をします。各クラスのインスタンス変数（クラスによって生成される変数）
+とメソッドは以下の通りです。（<%= link_to "ソースはこちら", "https://section9-shocyu-1.c9.io/library/genetic_source" %>）</p>
+
+<div class="source">
+<p><div class="comment">#------------------------------------------------------------#</div><br>
+&nbsp;&nbsp;１．Genetic クラス
+&nbsp;&nbsp;&nbsp;&nbsp;<div class="comment"># インスタンス変数</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;@genes（遺伝情報を格納する配列）<br>
+&nbsp;&nbsp;&nbsp;&nbsp;@value（遺伝情報に基づく値－表現型、を格納する配列）<br>
+&nbsp;&nbsp;&nbsp;&nbsp;@evaluation（ @value の情報を組み合わせて求める評価関数の値を<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;格納、この値によりどの個体が残るか決まる）<br>
+&nbsp;&nbsp;&nbsp;&nbsp;@reciprocal（ @evaluationの逆数、評価関数の値が少ないほど良い<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;場合に用いる<br></p>
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;<div class="comment">#クラスメソッド</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;cross メソッド（２つの個体の遺伝情報を交換）
+<div class="comment">#----------------------------------------------------------------#</div>
+</p>
+
+<p>
+&nbsp;&nbsp;２．Make_Individual クラス<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<div class="comment"># インスタンス変数</div><br>
+&nbsp;&nbsp;&nbsp;&nbsp;@individuals（遺伝情報を持つ集団を生成、配列の番号により<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;個体を識別）<br>
+</p>
+&nbsp;&nbsp;&nbsp;&nbsp;<div class="comment">#クラスメソッド</div><br>
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;cross_individualメソッド（parentからchildへの集団全体の交叉<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;－Geneticsクラスの、crossメソッド使用）<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#rankingメソッド（交叉によって生まれたchild群の評価関数<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(evaluation)によるランク付け)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#elimination メソッド（上位５０％を選別し、新しい世代(parent)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;を生成）<br>
+&nbsp;&nbsp;&nbsp;&nbsp;#sum_of_evaluationメソッド（それぞれの個体の評価関数の和を取る）<br>
+<div class="comment">#------------------------------------------------------------#</div>
+</p>
+</div>
+
+<p><%= link_to "ソースはこちら", "https://section9-shocyu-1.c9.io/library/genetic_source" %></p>

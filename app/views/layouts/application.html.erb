@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Shocyu's Technical Blog</title>
+  
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  
+  <%= csrf_meta_tags %>
+  <!--[if lt IE 9]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  
+  <script type="text/javascript"
+    src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+  </script>
+</head>
+
+<body>
+  <div id="container">
+    <div id="header">
+      <%= render "shared/header" %>
+    </div>
+    <div id="content">
+      <% if flash.notice %>
+      <p class="notice"><%= flash.notice %></p>
+      <% end %>
+
+      <%= yield %>
+    </div>
+    <div id="sidebar">
+      <%= render "shared/sidebar" %>
+    </div>
+    <div id="footer">
+      <%= render "shared/footer" %>
+    </div>
+  </div>
+</body>
+</html>

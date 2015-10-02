@@ -1,0 +1,24 @@
+<%= render "shared/login_form" unless current_member %>
+
+<h2>会員のブログ</h2>
+<ul>
+  <% Entry.sidebar_entries(current_member, 5).each do |entry| %>
+  <li>
+    <%= link_to entry.title, entry %>
+    by <%= link_to entry.author.name, [entry.author, :entries] %>
+  </li>
+  <% end %>
+</ul>
+
+<h2>ライブラリ集(with ruby)</h2>
+<ul style="list-style:none;">
+  <li><%= link_to "アルゴリズム(map)", "#" %></li>
+    <ul style="list-style:none;">
+      <li><%= link_to "ハノイの塔", "https://section9-shocyu-1.c9.io/library/hanoi" %></li>
+      <li><%= link_to "ルート２も再帰アルゴリズムで", "https://section9-shocyu-1.c9.io/library/root2" %></li>
+    </ul>
+  <li><%= link_to "機械学習(map)", "#" %></li>
+    <ul style="list-style:none;">
+      <li><%= link_to "遺伝的アルゴリズム(試作)", "https://section9-shocyu-1.c9.io/library/genetic" %></li>
+    </ul>
+</ul>

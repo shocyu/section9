@@ -1,0 +1,140 @@
+<h2>ルート２も再帰的アルゴリズムで</h2>
+
+<p>このアルゴリズム集の前の記事では
+<%= link_to "ハノイの塔", "https://section9-shocyu-1.c9.io/library/hanoi" %>
+について取り上げました。</p>
+
+<p>ハノイの塔については、あるコマの数動かすとして、その１つ前のコマの動かし方が分かっていれば次も解ける、ということが分かります。</p>
+
+<p>その特徴を生かして、ハノイの塔の解き方を出してくれる処理があるならば、
+それを繰り返し呼び出すことでコマの数が多くなっても答えを出す処理が出来ます。</p>
+
+<p>コンピュータではある処理（関数、メソッド）の中でその処理自身を呼び出すことが出来る、という特徴があります。それを使えば、
+複雑な繰り返し処理も可能です。この方法を「再帰的処理」といいました。（ただしハノイの塔に関しては ruby ならば１０個が限界かもしれません。
+それ以上は結果の出力に少し時間がかかりました）</p>
+
+<p>ではその「再帰的処理」が最も本領を発揮するアルゴリズム「連分数展開」が今日の課題です。今回は「連分数展開」を用いてルート２の値
+( 1.41421356...) のより精度の高い値を求めてみましょう。</p>
+
+<p>ルート２の連分数展開についてはこちらの解説を参考にしました
+<%= link_to "(http://math19575.web.fc2.com/pdf/sqrt2/sqrt2.html)", "http://math19575.web.fc2.com/pdf/sqrt2/sqrt2.html" %></p>
+
+<p>結論だけ申しますと、ルート２は下の式のようにひたすら分母が連なる分数で表せます（分母の中にさらに分母がある感じです）。</p>
+
+<div align="center">
+<p><%= link_to(image_tag("fraction.png", size: "450x250", align: "top")) %></p>
+</div>
+
+<p>そこで、(2 + (1 / 分母) ) の（分母）のところに同じ処理を入れてやればよさそうです。</p>
+
+<p>ソースは以下の通りです。</p>
+
+<div class="source">
+<p>
+<div class ="comment">#答えを格納する変数（float 型）</div><br>
+answer = 0.0
+</p>
+
+<p>
+<div class ="comment"># root2_fraction メソッド<br>
+#連分数展開の処理を n 回行うメソッド<br></div>
+def root2_fraction(n)<br>
+&nbsp;&nbsp;a = 0.0 
+</p>
+
+<p>
+<div class ="comment">&nbsp;&nbsp;# n が１ならば、最小単位（ = 5/2 )を返す</div><br>
+&nbsp;&nbsp;if n &lt;= 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;a = 2.5<br>
+<div class ="comment">&nbsp;&nbsp;# n が１より大きければ、いちばん分母に同じメソッドを入れ込む（再帰的処理）</div><br>
+&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;a = (2 + (1 / root2_fraction(n - 1) ) ).to_f<br>
+&nbsp;&nbsp;end
+</p>
+
+<p>
+&nbsp;&nbsp;return a&nbsp;&nbsp;&nbsp;&nbsp;#処理を繰り返した結果を返す<br>
+end<br>
+<div class ="comment"># root2_fraction メソッド終わり</div>
+</p>
+
+<p>
+<div class ="comment">#処理を繰り返す回数を入力（N)<br></div>
+puts &quot;How many times?&quot;<br>
+N = gets.to_i<br>
+puts &quot;\n&quot;
+</p>
+
+<p>
+<div class ="comment"># １回から N回処理を実行した結果を出力<br></div>
+for i in 1..N do
+</p>
+
+<p>
+&nbsp;&nbsp;<div class ="comment"># root2_fraction メソッド呼び出し（処理を i 繰り返す）<br></div>
+&nbsp;&nbsp;answer = 1.0 + (1 / root2_fraction(i) )<br>
+&nbsp;&nbsp;puts answer.to_s
+</p>
+
+<p>
+&nbsp;&nbsp;answer = 0.0&nbsp;&nbsp;&nbsp;&nbsp;# answer の値を初期化<br>
+end
+</p>
+</div>
+<br>
+<p>結果は以下の通りです。１０回の処理で 1.41421356（「ひとよひとよにひとみごろ」）と小数点以下８ケタが再現されています。
+たった３２行のプログラムの威力をご確認あれ！
+</p>
+
+<div align="center">
+<p><%= link_to(image_tag("root2_result.png", size: "300x250", align: "top")) %></p>
+</div>
+
+<p>ところで、ruby の float オブジェクトは小数点以下１６ケタしか表現されません。さらに調べたい、という方には、軽くて
+（なんとプログラム全体の容量は 1,500 キロバイト！）書きやすい文法の&nbsp;
+<%= link_to "十進 BASIC", "http://hp.vector.co.jp/authors/VA008683/" %>&nbsp;
+がおすすめです。しかも計算結果を 1000 桁出力できる、強力なプログラムです。
+</p>
+
+<p>１０進 BASIC でのソースはこちらです</p>
+
+<div class="source">
+<p>
+DECLARE EXTERNAL FUNCTION root2_fraction
+</p>
+
+<p>
+LET answer = 0.0
+</p>
+
+<p>
+PRINT &quot;How many times?&quot;<br>
+INPUT a
+</p>
+
+<p>
+FOR i=1 TO a
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;LET answer = 1 + (1 / root2_fraction(i) )<br>
+&nbsp;&nbsp;&nbsp;PRINT answer<br>
+    <br>
+&nbsp;&nbsp;&nbsp;LET answer = 0.0<br>
+NEXT i<br>
+END
+</p>
+
+<p>
+EXTERNAL FUNCTION root2_fraction(n)
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;IF n &lt;= 1 THEN<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LET root2_fraction = 2.5<br>
+&nbsp;&nbsp;&nbsp;ELSE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LET root2_fraction = 2 + (1 / root2_fraction(n - 1) )<br>
+&nbsp;&nbsp;&nbsp;END IF<br>
+END FUNCTION
+</p>
+</div>
